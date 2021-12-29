@@ -8,7 +8,7 @@ class Perceptron:
 
     data:
         x1, x2, ..., xN: N vector of R_D
-        y1, y2, ..., yN: N scalar
+        y1, y2, ..., yN: N value in {-1, 1}
 
         matrix form:
         X: N,D matrix = xi are the columns
@@ -54,8 +54,8 @@ class Perceptron:
                     = relu(-w * x * y)
 
         loss: R_D -> R+
-        loss(w) = 1 / N * sum(i)(relu(-f(xi) * yi))
-                    = 1 / N * sum(i)(relu(-w * xi * yi))
+        loss(w) = 1 / N * sum(n)(relu(-f(xn) * yn))
+                    = 1 / N * sum(n)(relu(-w * xn * yn))
 
         numpy matrix form: (@: matrix mul, *: term by term mul)
         loss(W): M_D,1 -> R+
@@ -72,8 +72,8 @@ class Perceptron:
 
     loss gradient:
         Gloss: R_D -> R_D 
-        Gloss(w) = 1 / N * (sum(i tq -wi * w * yi > 0)(-xi * yi) + sum(i tq -xi * w * yi < 0)(0))
-                = 1 / N * sum(i tq -xi * w * yi > 0)(-xi * yi)
+        Gloss(w) = 1 / N * (sum(n tq -wn * w * yn > 0)(-xn * yn) + sum(n tq -xn * w * yn < 0)(0))
+                = 1 / N * sum(n tq -xn * w * yn > 0)(-xn * yn)
 
         numpy matrix form: (@: matrix mul, *: term by term mul)
         mask = -X @ W * Y > 0
