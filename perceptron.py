@@ -2,6 +2,84 @@ import numpy as np
 
 
 class Perceptron:
+    """
+    N: number of data sample
+    D: number of dimension or feature of the data
+
+    data:
+        x1, x2, ..., xN: N vector of R_D
+        y1, y2, ..., yN: N scalar
+
+        matrix form:
+        X: N,D matrix = xi are the columns
+        Y: N,1 matrix = yi are the columns
+
+    model:
+        parameters: (b, w) = (b, w1, w2, ..., wD)
+                    = w' = (w'1, ..., w'D, w'D+1)
+
+        f: R_D -> R
+        f(x) = b + w1 * x1 + w2 * x2 + ... + wD * xD
+                    = b + w * x
+                    = w' * x' with x' = (1, x)
+
+        x trics:
+        we will use D <- D+1, x <- x', w <- w'        
+
+        matrix form:
+        W: D,1 matrix
+
+        f:M_N,D -> M_N,1
+        f(X) = X * W
+
+    predict:
+        y_pred: prediction of the model
+        sign(x) = 1 if x > 0 else -1
+
+        y_pred = sign(f(x))
+                = sign(w * x)
+
+        matrix form:
+        Y_pred: N,1 matrix
+        sign((x1, ..., xd)) = (sign(x1), ..., sign(xd))
+
+        Y_pred = sign(X * W)
+
+    loss function: (or error function) The function we try to minimize
+        relu(x) = x if x > 0 else 0
+
+        for 1 data sample:
+        loss: R_D -> R+
+        loss(w) = relu(-f(x) * y)
+                    = relu(-w * x * y)
+
+        loss: R_D -> R+
+        loss(w) = 1 / N * sum(i)(relu(-f(xi) * yi))
+                    = 1 / N * sum(i)(relu(-w * xi * yi))
+
+        numpy matrix form: (@: matrix mul, *: term by term mul)
+        loss(W): M_D,1 -> R+
+        result = -X @ self.W * Y
+        loss(W) = (result * (result > 0)).mean()
+
+    optimisation algorithm:
+        gradient descent:
+        W' <- W - eta * gradient(loss(W))
+
+        eta: hyper parameter, size of the gradient descent
+        eta too small, slow convergence, get locked in local minimum
+        eta too big, no convergence
+
+    loss gradient:
+        Gloss: R_D -> R_D 
+        Gloss(w) = 1 / N * (sum(i tq -wi * w * yi > 0)(-xi * yi) + sum(i tq -xi * w * yi < 0)(0))
+                = 1 / N * sum(i tq -xi * w * yi > 0)(-xi * yi)
+
+        numpy matrix form: (@: matrix mul, *: term by term mul)
+        mask = -X @ W * Y > 0
+        Gloss(W) = -1 / N * X[mask].T @ Y[mask] 
+    """
+
     def __init__(self, learning_rate=0.01, max_iter=100, fit_intercept=True, verbose=False, random_state=None):
         self.learning_rate = learning_rate
         self.max_iter = max_iter
@@ -14,7 +92,8 @@ class Perceptron:
 
     def fit(self, X_raw, Y_raw):
         """
-        Learn the W parameters
+        Learn the W parameters by minimising the loss function
+        using a gradient descent
         """
         X = self._X(X_raw)
         Y = self._Y(Y_raw)
@@ -35,14 +114,17 @@ class Perceptron:
         X: N,D matrix
         W: D,1 matrix
 
-        Y_hat = sign(X * W)
+        sign(x) = 1 if x > 0 else -1
+        sign((x1, ..., xd)) = (sign(x1), ..., sign(xd))
+
+        Y_predict = sign(X * W)
         """
         result = np.sign(self._X(X_raw) @ self.W)
         return np.array([self.conversion[0] if x == 1 else self.conversion[1] for x in result])
 
     def score(self, X_raw, Y_raw):
         """
-        Prediction rate between 0 (bad) and 1 (good)
+        Prediction accuracy between 0 (bad) and 1 (good)
         """
         return (self.predict(X_raw) == Y_raw).mean()
 
@@ -59,7 +141,7 @@ class Perceptron:
         relu(x) = x if x > 0 else 0
         relu((x1, ..., xd)) = (relu(x1), ..., relu(xd))
 
-        1 / N * sum(relu(-X * W * Y))
+        1 / N * sum(i)(relu(-X_i * W * Y_i))
         """
         result = -X @ self.W * Y
         return (result * (result > 0)).mean()
